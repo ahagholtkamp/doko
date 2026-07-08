@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasserböcke Dokozettel & Statistik</title>
-    <!-- Unabhängiges App-Icon (Lädt direkt aus dem Code ohne Internet-Verbindung) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📇</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📇</text></svg>">
-    <!-- Chart.js für die Grafiken laden -->
+  <!-- Verknüpfung zur App-Konfiguration (entfernt das Browser-Logo im Icon) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <!-- Schickes, hochauflösendes App-Icon (Wähle deine Variante) -->
+    <!-- Variante A: Kreuz-Dame (Standard) -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/queen-of-clubs.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/queen-of-clubs.png">
+
+    <!-- HINWEIS: Wenn du lieber die Herz-Zehn willst, lösche die 2 Zeilen von Variante A und nimm diese hier:
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/10-of-hearts.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/10-of-hearts.png">
+    -->    <!-- Chart.js für die Grafiken laden -->
   <!--  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    -->
     <style>
         body {
