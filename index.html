@@ -310,6 +310,12 @@
 
         <div id="gameScreen" style="display:none;">
             <h2>Aktueller Stand</h2>
+
+            <div id="geberDisplay" class="geber-info">
+                <span id="geberText">🔄 Aktueller Geber: -</span>
+                <button class="secondary" onclick="naechsterGeberManuell()">Geber weitergeben ➔</button>
+            </div>
+
             <div class="table-responsive">
                 <table>
                     <thead><tr id="tableHeaders"></tr></thead>
@@ -319,11 +325,6 @@
             </div>
 
             <button onclick="spielAbschliessenUndArchivieren()" class="archive-btn">💾 Spiel offiziell abschließen & archivieren</button>
-
-            <div id="geberDisplay" class="geber-info" style="display:none;">
-                <span id="geberText">Aktueller Geber: -</span>
-                <button class="secondary" onclick="naechsterGeberManuell()">Geber weitergeben ➔</button>
-            </div>
 
             <div class="entry-box">
                 <h3>Runde eintragen</h3>
@@ -447,6 +448,9 @@ const APP_CHANGES = [
             document.getElementById('setupScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
         }
+
+        // Version anzeigen
+        document.getElementById('versionText').innerText = APP_VERSION;
     };
 
     // Erzeugt die Dropdowns für eure 8 Spieler auf der Startseite
@@ -533,7 +537,6 @@ const APP_CHANGES = [
         let headerHtml = `<th class="meta-th">Wert</th><th class="meta-th">Kommentar</th>`;
         headerHtml += aktiveSpieler.map(name => `<th>${name}</th>`).join('');
         document.getElementById('tableHeaders').innerHTML = headerHtml;
-        document.getElementById('geberDisplay').style.display = aktiveSpieler.length > 4 ? 'flex' : 'none';
         document.getElementById('minusModeSonderfaelle').style.display = schreibModus === "minusOnly" ? 'block' : 'none';
         aktualisiereGeberAnzeige();
         aktualisiereSumme();
@@ -549,7 +552,7 @@ const APP_CHANGES = [
     }
 
     function aktualisiereGeberAnzeige() {
-        if (aktiveSpieler.length > 4) document.getElementById('geberText').innerText = `🔄 Geber: ${aktiveSpieler[geberIndex]}`;
+        document.getElementById('geberText').innerText = `🔄 Aktueller Geber: ${aktiveSpieler[geberIndex]}`;
         const spielerAmTisch = ermittleAktiveSpielerAmTisch();
         document.getElementById('winnerCheckboxContainer').innerHTML = aktiveSpieler.map((name, index) => {
             if (spielerAmTisch.includes(index)) {
@@ -565,23 +568,23 @@ const APP_CHANGES = [
     function rundeEintragen() {
         const punkteBasis = parseInt(document.getElementById('scoreValue').value);
         if (isNaN(punkteBasis) || punkteBasis <= 0) return;
-        const spielerAmTischIndizes = ermittleAktiveSpielerAmTisch();
-        let gewinnerIndizes = [];
-        document.querySelectorAll('.winner-cb').forEach(cb => { if (cb.checked) gewinnerIndizes.push(parseInt(cb.value)); });
+        const spielerAmTischIndizen = ermittleAktiveSpielerAmTisch();
+        let gewinnerIndizen = [];
+        document.querySelectorAll('.winner-cb').forEach(cb => { if (cb.checked) gewinnerIndizen.push(parseInt(cb.value)); });
 
-        if (gewinnerIndizes.length === 0 || gewinnerIndizes.length > 3) { alert("Bitte gültige Gewinneranzahl wählen!"); return; }
+        if (gewinnerIndizen.length === 0 || gewinnerIndizen.length > 3) { alert("Bitte gültige Gewinneranzahl wählen!"); return; }
         let rundenPunkte = new Array(aktiveSpieler.length).fill(0);
         let kommentar = "Normales Spiel";
 
-        if (gewinnerIndizes.length === 1) {
-            let g = gewinnerIndizes[0]; kommentar = `Solo ${aktiveSpieler[g]}`;
-            spielerAmTischIndizes.forEach(i => rundenPunkte[i] = (i === g) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis * 3) : -punkteBasis);
-        } else if (gewinnerIndizes.length === 3) {
-            let v = spielerAmTischIndizes.find(i => !gewinnerIndizen.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}`;
-            spielerAmTischIndizes.forEach(i => rundenPunkte[i] = (i === v) ? -(punkteBasis * 3) : ((schreibModus === "minusOnly") ? 0 : punkteBasis));
+        if (gewinnerIndizen.length === 1) {
+            let g = gewinnerIndizen[0]; kommentar = `Solo ${aktiveSpieler[g]}`;
+            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = (i === g) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis * 3) : -punkteBasis);
+        } else if (gewinnerIndizen.length === 3) {
+            let v = spielerAmTischIndizen.find(i => !gewinnerIndizen.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}`;
+            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = (i === v) ? -(punkteBasis * 3) : ((schreibModus === "minusOnly") ? 0 : punkteBasis));
         } else {
-            kommentar = `Normal (${aktiveSpieler[gewinnerIndizes[0]]} & ${aktiveSpieler[gewinnerIndizes[1]]})`;
-            spielerAmTischIndizes.forEach(i => rundenPunkte[i] = gewinnerIndizes.includes(i) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis) : -punkteBasis);
+            kommentar = `Normal (${aktiveSpieler[gewinnerIndizen[0]]} & ${aktiveSpieler[gewinnerIndizen[1]]})`;
+            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = gewinnerIndizen.includes(i) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis) : -punkteBasis);
         }
 
         punkteHistorie.push({ punkte: rundenPunkte, wert: punkteBasis, kommentar: kommentar });
@@ -597,11 +600,13 @@ const APP_CHANGES = [
         ermittleAktiveSpielerAmTisch().forEach(i => rundenPunkte[i] = (i === h) ? ((schreibModus === "minusOnly") ? 0 : w * 3) : -w);
         punkteHistorie.push({ punkte: rundenPunkte, wert: w, kommentar: `Hochzeit ${aktiveSpieler[h]}` });
         speichereInLocalStorage(); tabelleNeuZeichnen();
+        // Hochzeit: Geber wechselt NICHT
     }
 
     function schmeissenEintragen() {
         let r = new Array(aktiveSpieler.length).fill(0); r[geberIndex] = -100;
         punkteHistorie.push({ punkte: r, wert: 100, kommentar: `Geschmissen (${aktiveSpieler[geberIndex]})` });
+        // Schmeißen: Geber wechselt NICHT
         speichereInLocalStorage(); tabelleNeuZeichnen();
     }
 
@@ -618,6 +623,7 @@ const APP_CHANGES = [
         if (isNaN(w)) return;
         let r = new Array(aktiveSpieler.length).fill(0); r[s] = w;
         punkteHistorie.push({ punkte: r, wert: Math.abs(w), kommentar: `Korrektur: ${aktiveSpieler[s]}` });
+        // Manuelle Buchung: Geber wechselt NICHT
         speichereInLocalStorage(); tabelleNeuZeichnen();
     }
 
@@ -858,11 +864,6 @@ const APP_CHANGES = [
     function zeigeVersionsInfo() {
         alert("Dokozettel v" + APP_VERSION + "\nBuild: " + APP_BUILD + "\n\n" + APP_CHANGES.join("\n"));
     }
-
-    // Version anzeigen
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('versionText').innerText = APP_VERSION;
-    });
 </script>
 </body>
 </html>
