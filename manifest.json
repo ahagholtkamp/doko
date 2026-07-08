@@ -3,11 +3,11 @@
   "short_name": "Wasserböcke",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f4f7f6",
-  "theme_color": "#27ae60",
+  "background_color": "#2c3e50",
+  "theme_color": "#212f3d",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2327ae60'/><text y='75' x='10' font-family='Arial' font-size='75' fill='white'>🃞</text></svg>",
+      "src": "klppe.png",
       "sizes": "512x512",
       "type": "image/png"
     }
