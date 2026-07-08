@@ -251,12 +251,40 @@
 #versionBox:hover{
     color:#2c3e50;
 }
+        .title-bar{
+    position: relative;
+}
+
+#infoButton{
+    position:absolute;
+    right:0;
+    top:0;
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    margin:0;
+    padding:0;
+    background:#3498db;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#infoButton:hover{
+    background:#2980b9;
+}
     </style>
 </head>
 <body>
 
 <div class="container">
+   <div class="title-bar">
     <h1>🌊 Wasserböcke Dokozettel 📇</h1>
+    <button id="infoButton" onclick="zeigeVersionsInfo()" title="App-Information">
+        ?
+    </button>
+</div>
 
     <div class="nav-tabs">
         <button class="nav-btn active" onclick="switchTab('gameTab')">📝 Aktuelles Spiel</button>
