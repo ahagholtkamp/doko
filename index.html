@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wasserböcke Dokozettel & Statistik</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        h1 {
+            font-size: 24px;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+        /* NAVIGATION */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .nav-btn {
+            background: #e5e8e8;
+            color: #5d6d7e;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
+        .nav-btn.active {
+            background: #27ae60;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* SPIELER SETUP ROW */
+        .player-setup-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .player-setup-row {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            justify-content: space-between;
+        }
+        .player-name-label {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        .player-pos-select {
+            width: auto !important;
+            min-width: 180px;
+            padding: 8px 12px;
+            font-size: 15px;
+        }
+        /* ALLGEMEINE STYLES */
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            background-color: #27ae60;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #219653;
+        }
+        button.secondary {
+            background-color: #7f8c8d;
+        }
+        button.secondary:hover {
+            background-color: #6c7a7d;
+        }
+        button.action-btn {
+            background-color: #2980b9;
+            padding: 10px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        button.archive-btn {
+            background-color: #3498db;
+            margin-top: 15px;
+        }
+        .geber-info {
+            background-color: #e8f4f8;
+            border: 1px solid #aed6f1;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            color: #2e86c1;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .geber-info button {
+            width: auto;
+            margin: 0;
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+        .meta-th {
+            background-color: #7f8c8d;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #eaeded !important;
+        }
+        .entry-box {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0 15px 0;
+        }
+        .checkbox-label {
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .checkbox-label.disabled-player {
+            background: #e5e8e8;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        .flex-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        /* STATISTIK STYLES */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media(min-width: 600px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .chart-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌊 Wasserböcke Dokozettel 📇</h1>
+
+    <div class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('gameTab')">📝 Aktuelles Spiel</button>
+        <button class="nav-btn" onclick="switchTab('statsTab'); ladeCloudDaten();">📊 Statistiken & Archiv</button>
+    </div>
+
+    <div id="gameTab" class="tab-content active">
+        <div id="setupScreen">
+            <h2>Spiel-Setup & Sitzreihenfolge</h2>
+            
+            <label for="gameModeSelect"><strong>Schreib-Modus:</strong></label>
+            <select id="gameModeSelect" style="margin-bottom: 25px;">
+                <option value="normal">Normal (Gewinner +, Verlierer -)</option>
+                <option value="minusOnly">Nur Minus aufschreiben (Gewinner 0, Verlierer -)</option>
+            </select>
+            
+            <label><strong>Wer spielt heute auf welcher Position?</strong></label>
+            <div class="player-setup-list" id="setupPlayerList">
+                </div>
+            
+            <button onclick="startetSpiel()">Spiel starten</button>
+        </div>
+
+        <div id="gameScreen" style="display:none;">
+            <h2>Aktueller Stand</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr id="tableHeaders"></tr></thead>
+                    <tbody id="scoreTableBody"></tbody>
+                    <tfoot><tr id="totalRow" class="total-row"></tr></tfoot>
+                </table>
+            </div>
+
+            <button onclick="spielAbschliessenUndArchivieren()" class="archive-btn">💾 Spiel offiziell abschließen & archivieren</button>
+
+            <div id="geberDisplay" class="geber-info" style="display:none;">
+                <span id="geberText">Aktueller Geber: -</span>
+                <button class="secondary" onclick="naechsterGeberManuell()">Geber weitergeben ➔</button>
+            </div>
+
+            <div class="entry-box">
+                <h3>Runde eintragen</h3>
+                <input type="number" id="scoreValue" min="1" value="5">
+                <div class="checkbox-group" id="winnerCheckboxContainer"></div>
+                <button onclick="rundeEintragen()">Runde speichern</button>
+            </div>
+
+            <div class="entry-box" style="background: #ebf5fb; border-color: #aed6f1;">
+                <h3>Hochzeit</h3>
+                <div class="flex-box">
+                    <select id="weddingPlayer" style="flex: 2;"></select>
+                    <select id="weddingMultiplier" style="flex: 1;">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                    </select>
+                    <button onclick="hochzeitEintragen()" class="action-btn" style="margin:0; flex: 1;">Buchen</button>
+                </div>
+                <div id="minusModeSonderfaelle" style="display:none; margin-top:15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="schmeissenEintragen()" class="action-btn" style="background-color: #e67e22; margin:0;">🃏 Schmeißen</button>
+                        <button onclick="nullspielEintragen()" class="action-btn" style="background-color: #8e44ad; margin:0;">🃟 Nullspiel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="entry-box" style="background: #fdf2f2; border-color: #f5c6cb;">
+                <h3>Manuelle Korrektur</h3>
+                <select id="penaltyPlayer"></select>
+                <input type="number" id="penaltyValue" placeholder="Punkte z.B. -10" style="margin-top:10px;">
+                <button onclick="sonderbuchungEintragen()" class="secondary" style="background-color: #e74c3c;">Buchen</button>
+            </div>
+            <button onclick="spielZuruecksetzen()" class="secondary" style="margin-top: 30px; background-color: #95a5a6;">Spiel löschen & Neustart</button>
+        </div>
+    </div>
+
+    <div id="statsTab" class="tab-content">
+        <h2>📊 Cloud-Statistiken & Historie</h2>
+        <div id="loadingMessage" style="text-align:center; color:#7f8c8d;">Lade Daten aus Google Sheets... ⏳</div>
+        
+        <div id="statsDashboard" style="display:none;">
+            <div class="entry-box">
+                <label for="historyGameSelect"><strong>Vergangenes Spiel ansehen:</strong></label>
+                <select id="historyGameSelect" onchange="zeigeHistorischesSpiel(this.value)"></select>
+                
+                <div class="table-responsive" id="historyTableContainer" style="display:none; margin-top:15px;">
+                    <table id="historyTable">
+                        <thead><tr id="historyHeaders"></tr></thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="chart-card">
+                    <h3>🏆 Ewige Punktebestenliste</h3>
+                    <canvas id="chartEwigePunkte"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>👑 Wer spielt die meisten Solos?</h3>
+                    <canvas id="chartSolos"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ACHTUNG: Hier unbedingt deine frisch aus Google Apps Script kopierte Web-App-URL eintragen!
+    const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzrlBZzohnWsTjGASLH4pKiNrqNXUs5GMdUZcN-97dUoCFW-2_KpyZ20YcgSyP1fMb2/exec";
+
+    // Eure feste Spielergruppe
+    const STAMM_SPIELER = ["Bernd", "Benne", "Daniel", "Florian", "Ralf", "Olaf", "Tom", "Uwe"];
+
+    let aktiveSpieler = [];
+    let punkteHistorie = [];
+    let geberIndex = 0; 
+    let schreibModus = "normal";
+    let cloudRohdaten = []; 
+
+    let chart1 = null;
+    let chart2 = null;
+
+    window.onload = function() {
+        // Erst den Setup-Screen mit euren Namen aufbauen
+        baueSetupScreenAuf();
+
+        // Prüfen, ob noch ein Spiel läuft
+        if (localStorage.getItem('doko_aktiveSpieler')) {
+            aktiveSpieler = JSON.parse(localStorage.getItem('doko_aktiveSpieler'));
+            punkteHistorie = JSON.parse(localStorage.getItem('doko_punkteHistorie'));
+            geberIndex = parseInt(localStorage.getItem('doko_geberIndex') || 0);
+            schreibModus = localStorage.getItem('doko_schreibModus') || "normal";
+            
+            baueSpielfeldAuf();
+            tabelleNeuZeichnen();
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+        }
+    };
+
+    // Erzeugt die Dropdowns für eure 8 Spieler auf der Startseite
+    function baueSetupScreenAuf() {
+        const listContainer = document.getElementById('setupPlayerList');
+        listContainer.innerHTML = "";
+        
+        STAMM_SPIELER.forEach((name, idx) => {
+            let rowHtml = `
+                <div class="player-setup-row">
+                    <span class="player-name-label">${name}</span>
+                    <select class="player-pos-select" id="pos_${idx}">
+                        <option value="none">Heute nicht dabei</option>
+                        <option value="1">1 = Erster Geber</option>
+                        <option value="2">2 = Nächste Position</option>
+                        <option value="3">3 = Position 3</option>
+                        <option value="4">4 = Position 4</option>
+                        <option value="5">5 = Position 5</option>
+                        <option value="6">6 = Position 6</option>
+                    </select>
+                </div>
+            `;
+            listContainer.innerHTML += rowHtml;
+        });
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(event) {
+            event.target.classList.add('active');
+        }
+    }
+
+    // ==========================================
+    // SPIEL STARTEN LOGIK (SORTIERUNG)
+    // ==========================================
+    function startetSpiel() {
+        let temporaereListe = [];
+        let positionenSet = new Set();
+        let doppeltePosition = false;
+
+        STAMM_SPIELER.forEach((name, idx) => {
+            const val = document.getElementById(`pos_${idx}`).value;
+            if (val !== "none") {
+                const posNum = parseInt(val);
+                if (positionenSet.has(posNum)) {
+                    doppeltePosition = true;
+                }
+                positionenSet.add(posNum);
+                temporaereListe.push({ name: name, pos: posNum });
+            }
+        });
+
+        if (doppeltePosition) {
+            alert("Fehler: Eine Position wurde doppelt vergeben! Bitte ordne jedem Spieler eine eindeutige Zahl zu.");
+            return;
+        }
+
+        if (temporaereListe.length < 4 || temporaereListe.length > 6) {
+            alert("Es müssen heute mindestens 4 und maximal 6 Spieler teilnehmen!");
+            return;
+        }
+
+        // Spieler exakt nach ihrer Positionsnummer sortieren (1, 2, 3...)
+        temporaereListe.sort((a, b) => a.pos - b.pos);
+        
+        // Reine Namen-Liste für das Spiel erzeugen
+        aktiveSpieler = temporaereListe.map(item => item.name);
+        
+        schreibModus = document.getElementById('gameModeSelect').value;
+        geberIndex = 0; // Spieler auf Position 1 (Index 0) ist automatisch der erste Geber
+        punkteHistorie = [];
+        
+        speichereInLocalStorage();
+        baueSpielfeldAuf();
+        
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('gameScreen').style.display = 'block';
+    }
+
+    function baueSpielfeldAuf() {
+        let headerHtml = `<th class="meta-th">Wert</th><th class="meta-th">Kommentar</th>`;
+        headerHtml += aktiveSpieler.map(name => `<th>${name}</th>`).join('');
+        document.getElementById('tableHeaders').innerHTML = headerHtml;
+        document.getElementById('geberDisplay').style.display = aktiveSpieler.length > 4 ? 'flex' : 'none';
+        document.getElementById('minusModeSonderfaelle').style.display = schreibModus === "minusOnly" ? 'block' : 'none';
+        aktualisiereGeberAnzeige();
+        aktualisiereSumme();
+        document.getElementById('penaltyPlayer').innerHTML = aktiveSpieler.map((name, index) => `<option value="${index}">${name}</option>`).join('');
+        document.getElementById('weddingPlayer').innerHTML = aktiveSpieler.map((name, index) => `<option value="${index}">${name}</option>`).join('');
+    }
+
+    function ermittleAktiveSpielerAmTisch() {
+        if (aktiveSpieler.length === 4) return [0, 1, 2, 3];
+        let N = aktiveSpieler.length;
+        let tischIndizes = [(geberIndex + 1) % N, (geberIndex + 2) % N, ((geberIndex - 1) % N + N) % N, ((geberIndex - 2) % N + N) % N];
+        return tischIndizes.sort((a, b) => a - b);
+    }
+
+    function aktualisiereGeberAnzeige() {
+        if (aktiveSpieler.length > 4) document.getElementById('geberText').innerText = `🔄 Geber: ${aktiveSpieler[geberIndex]}`;
+        const spielerAmTisch = ermittleAktiveSpielerAmTisch();
+        document.getElementById('winnerCheckboxContainer').innerHTML = aktiveSpieler.map((name, index) => {
+            if (spielerAmTisch.includes(index)) {
+                return `<label class="checkbox-label"><input type="checkbox" class="winner-cb" value="${index}"> <span>${name}</span></label>`;
+            } else {
+                return `<label class="checkbox-label disabled-player"><input type="checkbox" disabled> <span>${name} (aus)</span></label>`;
+            }
+        }).join('');
+    }
+
+    function naechsterGeberManuell() { geberIndex = (geberIndex + 1) % aktiveSpieler.length; speichereInLocalStorage(); aktualisiereGeberAnzeige(); }
+
+    function rundeEintragen() {
+        const punkteBasis = parseInt(document.getElementById('scoreValue').value);
+        if (isNaN(punkteBasis) || punkteBasis <= 0) return;
+        const spielerAmTischIndizes = ermittleAktiveSpielerAmTisch();
+        let gewinnerIndizes = [];
+        document.querySelectorAll('.winner-cb').forEach(cb => { if (cb.checked) gewinnerIndizes.push(parseInt(cb.value)); });
+
+        if (gewinnerIndizes.length === 0 || gewinnerIndizes.length > 3) { alert("Bitte gültige Gewinneranzahl wählen!"); return; }
+        let rundenPunkte = new Array(aktiveSpieler.length).fill(0);
+        let kommentar = "Normales Spiel";
+
+        if (gewinnerIndizes.length === 1) {
+            let g = gewinnerIndizes[0]; kommentar = `Solo ${aktiveSpieler[g]}`;
+            spielerAmTischIndizes.forEach(i => rundenPunkte[i] = (i === g) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis * 3) : -punkteBasis);
+        } else if (gewinnerIndizes.length === 3) {
+            let v = spielerAmTischIndizes.find(i => !gewinnerIndizes.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}`;
+            spielerAmTischIndizes.forEach(i => rundenPunkte[i] = (i === v) ? -(punkteBasis * 3) : ((schreibModus === "minusOnly") ? 0 : punkteBasis));
+        } else {
+            kommentar = `Normal (${aktiveSpieler[gewinnerIndizes[0]]} & ${aktiveSpieler[gewinnerIndizes[1]]})`;
+            spielerAmTischIndizes.forEach(i => rundenPunkte[i] = gewinnerIndizes.includes(i) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis) : -punkteBasis);
+        }
+
+        punkteHistorie.push({ punkte: rundenPunkte, wert: punkteBasis, kommentar: kommentar });
+        geberIndex = (geberIndex + 1) % aktiveSpieler.length;
+        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereGeberAnzeige();
+    }
+
+    function hochzeitEintragen() {
+        const h = parseInt(document.getElementById('weddingPlayer').value);
+        const w = parseInt(document.getElementById('weddingMultiplier').value);
+        if (!ermittleAktiveSpielerAmTisch().includes(h)) return;
+        let rundenPunkte = new Array(aktiveSpieler.length).fill(0);
+        ermittleAktiveSpielerAmTisch().forEach(i => rundenPunkte[i] = (i === h) ? ((schreibModus === "minusOnly") ? 0 : w * 3) : -w);
+        punkteHistorie.push({ punkte: rundenPunkte, wert: w, kommentar: `Hochzeit ${aktiveSpieler[h]}` });
+        speichereInLocalStorage(); tabelleNeuZeichnen();
+    }
+
+    function schmeissenEintragen() {
+        let r = new Array(aktiveSpieler.length).fill(0); r[geberIndex] = -100;
+        punkteHistorie.push({ punkte: r, wert: 100, kommentar: `Geschmissen (${aktiveSpieler[geberIndex]})` });
+        speichereInLocalStorage(); tabelleNeuZeichnen();
+    }
+
+    function nullspielEintragen() {
+        let r = new Array(aktiveSpieler.length).fill(0); r[geberIndex] = -100;
+        punkteHistorie.push({ punkte: r, wert: 100, kommentar: `Nullspiel (${aktiveSpieler[geberIndex]})` });
+        geberIndex = (geberIndex + 1) % aktiveSpieler.length;
+        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereGeberAnzeige();
+    }
+
+    function sonderbuchungEintragen() {
+        const s = parseInt(document.getElementById('penaltyPlayer').value);
+        const w = parseInt(document.getElementById('penaltyValue').value);
+        if (isNaN(w)) return;
+        let r = new Array(aktiveSpieler.length).fill(0); r[s] = w;
+        punkteHistorie.push({ punkte: r, wert: Math.abs(w), kommentar: `Korrektur: ${aktiveSpieler[s]}` });
+        speichereInLocalStorage(); tabelleNeuZeichnen();
+    }
+
+    function berechneSummen() {
+        let summen = new Array(aktiveSpieler.length).fill(0);
+        punkteHistorie.forEach(r => { for (let i = 0; i < aktiveSpieler.length; i++) summen[i] += r.punkte[i]; });
+        return summen;
+    }
+
+    function tabelleNeuZeichnen() {
+        const tbody = document.getElementById('scoreTableBody'); tbody.innerHTML = "";
+        punkteHistorie.forEach((r) => {
+            let row = `<tr><td>${r.wert}</td><td style="font-style:italic; font-size:13px; text-align:left;">${r.kommentar}</td>`;
+            r.punkte.forEach(p => {
+                if (p > 0) row += `<td style="color:green; font-weight:bold;">+${p}</td>`;
+                else if (p < 0) row += `<td style="color:red;">${p}</td>`;
+                else row += `<td style="color:#95a5a6;">0</td>`;
+            });
+            tbody.innerHTML += row + "</tr>";
+        });
+        aktualisiereSumme();
+    }
+
+    function aktualisiereSumme() {
+        const totalRow = document.getElementById('totalRow');
+        totalRow.innerHTML = `<td>Gesamt</td><td></td>` + berechneSummen().map(s => {
+            if (s > 0) return `<td style="color:green; font-weight:bold;">+${s}</td>`;
+            if (s < 0) return `<td style="color:red; font-weight:bold;">${s}</td>`;
+            return `<td>0</td>`;
+        }).join('');
+    }
+
+    // ==========================================
+    // ARCHIVIERUNG (FIRE & FORGET WEGEN CORS)
+    // ==========================================
+    function spielAbschliessenUndArchivieren() {
+        if (punkteHistorie.length === 0) {
+            alert("Es gibt noch keine gespielten Runden zum Archivieren!");
+            return;
+        }
+        if (!confirm("Spiel beenden und an die Cloud-Datenbank senden?")) return;
+
+        const spielId = "SPIEL_" + Date.now();
+        const jetzt = new Date();
+        const datumString = `${String(jetzt.getDate()).padStart(2, '0')}.${String(jetzt.getMonth()+1).padStart(2, '0')}.${jetzt.getFullYear()} ${String(jetzt.getHours()).padStart(2, '0')}:${String(jetzt.getMinutes()).padStart(2, '0')}`;
+        
+        let datenbankRunden = [];
+        
+        punkteHistorie.forEach((runde, rundenIndex) => {
+            aktiveSpieler.forEach((spielerName, spielerIdx) => {
+                datenbankRunden.push({
+                    rundeNr: rundenIndex + 1,
+                    kommentar: runde.kommentar || "Spiel",
+                    spieler: spielerName,
+                    punkte: runde.punkte[spielerIdx] || 0
+                });
+            });
+        });
+
+        const spielDaten = {
+            spielId: spielId,
+            datum: datumString,
+            modus: schreibModus === "minusOnly" ? "Nur Minus" : "Normal (+/-)",
+            runden: datenbankRunden
+        };
+
+        const btn = document.querySelector(".archive-btn"); 
+        btn.innerText = "⏳ Sende alle Daten..."; 
+        btn.disabled = true;
+
+        fetch(CLOUD_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            headers: { "Content-Type": "text/plain" }, 
+            body: JSON.stringify(spielDaten) 
+        })
+        .then(() => { 
+            alert("Erfolgreich archiviert! Alle Spielzeilen wurden an das Google Sheet übertragen."); 
+            localStorage.clear(); 
+            location.reload(); 
+        })
+        .catch((err) => { 
+            alert("Kritischer Übertragungsfehler! Bitte Internetverbindung prüfen."); 
+            console.error(err);
+            btn.disabled = false; 
+            btn.innerText = "💾 Spiel offiziell abschließen & archivieren";
+        });
+    }
+
+    function speichereInLocalStorage() {
+        localStorage.setItem('doko_aktiveSpieler', JSON.stringify(aktiveSpieler));
+        localStorage.setItem('doko_punkteHistorie', JSON.stringify(punkteHistorie));
+        localStorage.setItem('doko_geberIndex', geberIndex);
+        localStorage.setItem('doko_schreibModus', schreibModus);
+    }
+
+    function spielZuruecksetzen() { if (confirm("Aktuelles Spiel löschen?")) { localStorage.clear(); location.reload(); } }
+
+    // ==========================================
+    // CLOUD STATISTIKEN & ARCHIV LADEN
+    // ==========================================
+    function ladeCloudDaten() {
+        document.getElementById('loadingMessage').style.display = 'block';
+        document.getElementById('statsDashboard').style.display = 'none';
+
+        fetch(CLOUD_URL)
+        .then(response => response.json())
+        .then(data => {
+            cloudRohdaten = data;
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('statsDashboard').style.display = 'block';
+            
+            befuelleSpieleAuswahl();
+            generiereGrafiken();
+        })
+        .catch(err => {
+            document.getElementById('loadingMessage').innerText = "Fehler beim Laden der Daten aus Google Sheets. ❌";
+            console.error(err);
+        });
+    }
+
+    function befuelleSpieleAuswahl() {
+        const select = document.getElementById('historyGameSelect');
+        select.innerHTML = '<option value="">-- Bitte wählen --</option>';
+        
+        let spiele = {};
+        cloudRohdaten.forEach(row => {
+            if(row["Spiel-ID"] && !spiele[row["Spiel-ID"]]) {
+                spiele[row["Spiel-ID"]] = row["Datum"] + " (" + row["Modus"] + ")";
+            }
+        });
+
+        for(let id in spiele) {
+            select.innerHTML += `<option value="${id}">${spiele[id]}</option>`;
+        }
+    }
+
+    function zeigeHistorischesSpiel(spielId) {
+        const container = document.getElementById('historyTableContainer');
+        if(!spielId) { container.style.display = 'none'; return; }
+        
+        container.style.display = 'block';
+        const spielZeilen = cloudRohdaten.filter(r => r["Spiel-ID"] === spielId);
+        
+        let spielerSet = new Set();
+        spielZeilen.forEach(z => { if(z["Spieler"]) spielerSet.add(z["Spieler"]); });
+        let spielerListe = Array.from(spielerSet);
+        
+        let htmlHeader = `<th>Runde</th><th>Typ</th>`;
+        spielerListe.forEach(s => htmlHeader += `<th>${s}</th>`);
+        document.getElementById('historyHeaders').innerHTML = htmlHeader;
+        
+        let maxRunde = Math.max(...spielZeilen.map(z => parseInt(z["Runde Nr"]) || 0));
+        let tbodyHtml = "";
+        
+        let endsummen = new Array(spielerListe.length).fill(0);
+
+        for(let r = 1; r <= maxRunde; r++) {
+            let rundenZeilen = spielZeilen.filter(z => parseInt(z["Runde Nr"]) === r);
+            if(rundenZeilen.length === 0) continue;
+            
+            let kommentar = rundenZeilen[0]["Kommentar"] || "Spiel";
+            let rowHtml = `<tr><td>${r}</td><td style="font-style:italic; font-size:12px;">${kommentar}</td>`;
+            
+            spielerListe.forEach((spieler, sIdx) => {
+                let z = rundenZeilen.find(line => line["Spieler"] === spieler);
+                let p = z ? parseInt(z["Punkte"]) : 0;
+                endsummen[sIdx] += p;
+
+                if(p > 0) rowHtml += `<td style="color:green; font-weight:bold;">+${p}</td>`;
+                else if(p < 0) rowHtml += `<td style="color:red;">${p}</td>`;
+                else rowHtml += `<td>0</td>`;
+            });
+            rowHtml += "</tr>";
+            tbodyHtml += rowHtml;
+        }
+
+        let sumRowHtml = `<tr class="total-row"><td>Gesamt</td><td></td>`;
+        endsummen.forEach(s => {
+            if(s > 0) sumRowHtml += `<td style="color:green;">+${s}</td>`;
+            else if(s < 0) sumRowHtml += `<td style="color:red;">${s}</td>`;
+            else sumRowHtml += `<td>0</td>`;
+        });
+        sumRowHtml += "</tr>";
+        
+        document.getElementById('historyBody').innerHTML = tbodyHtml + sumRowHtml;
+    }
+
+    function generiereGrafiken() {
+        let punkteKonto = {};
+        let soloKonto = {};
+
+        cloudRohdaten.forEach(row => {
+            let spieler = row["Spieler"];
+            if (!spieler) return;
+            
+            let punkte = parseInt(row["Punkte"] || 0);
+            let kommentar = row["Kommentar"] || "";
+
+            if(!punkteKonto[spieler]) punkteKonto[spieler] = 0;
+            punkteKonto[spieler] += punkte;
+
+            if(!soloKonto[spieler]) soloKonto[spieler] = 0;
+            if(kommentar.toLowerCase().includes("solo") && kommentar.includes(spieler) && punkte > 0) {
+                soloKonto[spieler]++;
+            }
+        });
+
+        if(chart1) chart1.destroy();
+        chart1 = new Chart(document.getElementById('chartEwigePunkte'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(punkteKonto),
+                datasets: [{
+                    label: 'Gesamtpunkte',
+                    data: Object.values(punkteKonto),
+                    backgroundColor: Object.values(punkteKonto).map(v => v >= 0 ? '#2ecc71' : '#e74c3c')
+                }]
+            },
+            options: { responsive: true }
+        });
+
+        if(chart2) chart2.destroy();
+        chart2 = new Chart(document.getElementById('chartSolos'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(soloKonto),
+                datasets: [{
+                    data: Object.values(soloKonto),
+                    backgroundColor: ['#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#1abc9c', '#34495e']
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+</script>
+</body>
+</html>
