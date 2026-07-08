@@ -389,15 +389,11 @@
             </div>
         </div>
     </div>
-        </div>
 
     <div id="versionBox" onclick="zeigeVersionsInfo()">
         Version <span id="versionText"></span>
     </div>
 
-</div>
-
-<script>
 </div>
 
 <script>
@@ -581,7 +577,7 @@ const APP_CHANGES = [
             let g = gewinnerIndizes[0]; kommentar = `Solo ${aktiveSpieler[g]}`;
             spielerAmTischIndizes.forEach(i => rundenPunkte[i] = (i === g) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis * 3) : -punkteBasis);
         } else if (gewinnerIndizes.length === 3) {
-            let v = spielerAmTischIndizes.find(i => !gewinnerIndizes.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}`;
+            let v = spielerAmTischIndizes.find(i => !gewinnerIndizen.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}`;
             spielerAmTischIndizes.forEach(i => rundenPunkte[i] = (i === v) ? -(punkteBasis * 3) : ((schreibModus === "minusOnly") ? 0 : punkteBasis));
         } else {
             kommentar = `Normal (${aktiveSpieler[gewinnerIndizes[0]]} & ${aktiveSpieler[gewinnerIndizes[1]]})`;
@@ -857,6 +853,16 @@ const APP_CHANGES = [
             options: { responsive: true }
         });
     }
+
+    // Hilfsfunktion für Versionsinformation (wird von Buttons aufgerufen)
+    function zeigeVersionsInfo() {
+        alert("Dokozettel v" + APP_VERSION + "\nBuild: " + APP_BUILD + "\n\n" + APP_CHANGES.join("\n"));
+    }
+
+    // Version anzeigen
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('versionText').innerText = APP_VERSION;
+    });
 </script>
 </body>
 </html>
