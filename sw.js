@@ -6,7 +6,8 @@ const URLS_ZU_CACHEN = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./app-icon.png"
+  "./app-icon.png",
+  "./app-icon-192.png"
 ];
 
 // Beim Installieren: App-Hülle in den Cache legen
