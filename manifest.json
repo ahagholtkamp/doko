@@ -1,0 +1,15 @@
+{
+  "name": "Wasserböcke Dokozettel",
+  "short_name": "Wasserböcke",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#27ae60",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/512/queen-of-clubs.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
