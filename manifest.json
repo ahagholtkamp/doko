@@ -7,8 +7,8 @@
   "theme_color": "#212f3d",
   "icons": [
     {
-      "src": "klppe.png",
-      "sizes": "any",
+      "src": "app-icon.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
