@@ -523,9 +523,14 @@
 // ==========================================
 // APP VERSION
 // ==========================================
-const APP_VERSION = "2.5.0";
+const APP_VERSION = "2.5.1";
 const APP_BUILD = "2026-07-09";
 const APP_CHANGES = [
+    "Version 2.5.1",
+    "",
+    "Neu:",
+    "• Automatisches Update: App lädt neue Versionen jetzt selbst nach, ohne manuelles Cache löschen",
+    "",
     "Version 2.5.0",
     "",
     "Neu:",
@@ -577,6 +582,15 @@ const APP_CHANGES = [
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(function(err) {
                 console.log('Service Worker Fehler:', err);
+            });
+
+            // Sobald im Hintergrund eine neue Version aktiv wird, Seite automatisch
+            // einmal neu laden, damit man nicht mehr manuell Cache löschen muss.
+            let neuGeladen = false;
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                if (neuGeladen) return;
+                neuGeladen = true;
+                location.reload();
             });
         }
         // Erst den Setup-Screen mit euren Namen aufbauen
