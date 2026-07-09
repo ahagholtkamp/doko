@@ -166,14 +166,43 @@
             padding: 6px 12px;
             font-size: 13px;
         }
+        .bock-info {
+            background-color: #fef5e7;
+            border: 1px solid #f5cba7;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            color: #ca6f1e;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .bock-info.aktiv {
+            background-color: #fdebd0;
+            border-color: #f39c12;
+        }
+        .bock-info button {
+            width: auto;
+            margin: 0;
+            padding: 6px 12px;
+            font-size: 13px;
+            background-color: #e67e22;
+        }
+        .bock-info button:hover {
+            background-color: #ca6f1e;
+        }
         
         /* SCORECARD STYLES */
         .scorecard-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-            margin: 20px 0;
-            padding: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            margin: 15px 0;
+            padding: 10px;
             background: #f8f9fa;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
@@ -182,9 +211,9 @@
             background: white;
             border: 2px solid #ddd;
             border-radius: 8px;
-            padding: 15px;
+            padding: 8px 4px;
             text-align: center;
-            min-height: 120px;
+            min-height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -192,15 +221,19 @@
         }
         .scorecard-name {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             word-break: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
         .scorecard-points {
-            font-size: 32px;
+            font-size: 18px;
             font-weight: bold;
-            min-height: 40px;
+            min-height: auto;
             display: flex;
             align-items: center;
         }
@@ -367,6 +400,14 @@
                 <option value="minusOnly">Nur Minus aufschreiben (Gewinner 0, Verlierer -)</option>
                 <option value="normal">Normal (Gewinner +, Verlierer -)</option>
             </select>
+
+            <label for="tackWertSelect"><strong>Wert je Tack:</strong></label>
+            <select id="tackWertSelect" style="margin-bottom: 25px;">
+                <option value="5">5 ct</option>
+                <option value="10" selected>10 ct</option>
+                <option value="20">20 ct</option>
+                <option value="40">40 ct</option>
+            </select>
             
             <label><strong>Wer spielt heute auf welcher Position?</strong></label>
             <div class="player-setup-list" id="setupPlayerList">
@@ -381,6 +422,11 @@
             <div id="geberDisplay" class="geber-info">
                 <span id="geberText">🔄 Aktueller Geber: -</span>
                 <button class="secondary" onclick="naechsterGeberManuell()">Geber weitergeben ➔</button>
+            </div>
+
+            <div id="bockDisplay" class="bock-info">
+                <span id="bockText">Kein Bock aktiv</span>
+                <button onclick="bockAusloesen()">🐐 Bock auslösen</button>
             </div>
 
             <!-- SCORECARD ÜBERBLICK -->
@@ -403,7 +449,8 @@
 
             <div class="entry-box">
                 <h3>Runde eintragen</h3>
-                <input type="number" id="scoreValue" min="1" value="5">
+                <input type="number" id="scoreValue" min="1" value="5" oninput="aktualisiereTackVorschau()">
+                <div id="tackVorschau" style="font-size:12px; color:#7f8c8d; margin-top:6px; text-align:center;"></div>
                 <div class="checkbox-group" id="winnerCheckboxContainer"></div>
                 <button onclick="rundeEintragen()">Runde speichern</button>
             </div>
@@ -412,16 +459,14 @@
                 <h3>Hochzeit</h3>
                 <div class="flex-box">
                     <select id="weddingPlayer" style="flex: 2;"></select>
-                    <select id="weddingMultiplier" style="flex: 1;">
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                    </select>
                     <button onclick="hochzeitEintragen()" class="action-btn" style="margin:0; flex: 1;">Buchen</button>
                 </div>
+                <div style="font-size:12px; color:#7f8c8d; margin-top:6px; text-align:center;">Verwendet den aktuellen Wert aus "Runde eintragen"</div>
                 <div id="minusModeSonderfaelle" style="display:none; margin-top:15px;">
                     <div style="display: flex; gap: 10px;">
                         <button onclick="schmeissenEintragen()" class="action-btn" style="background-color: #e67e22; margin:0;">🃏 Schmeißen</button>
                         <button onclick="nullspielEintragen()" class="action-btn" style="background-color: #8e44ad; margin:0;">🃟 Nullspiel</button>
+                        <button onclick="vergebenEintragen()" class="action-btn" style="background-color: #16a085; margin:0;">🔄 Vergeben</button>
                     </div>
                 </div>
             </div>
@@ -429,7 +474,7 @@
             <div class="entry-box" style="background: #fdf2f2; border-color: #f5c6cb;">
                 <h3>Manuelle Korrektur</h3>
                 <select id="penaltyPlayer"></select>
-                <input type="number" id="penaltyValue" placeholder="Punkte z.B. -10" style="margin-top:10px;">
+                <input type="number" id="penaltyValue" placeholder="Betrag in € z.B. -1.50" step="0.01" style="margin-top:10px;">
                 <button onclick="sonderbuchungEintragen()" class="secondary" style="background-color: #e74c3c;">Buchen</button>
             </div>
             <button onclick="spielZuruecksetzen()" class="secondary" style="margin-top: 30px; background-color: #95a5a6;">Spiel löschen & Neustart</button>
@@ -455,7 +500,7 @@
 
             <div class="stats-grid">
                 <div class="chart-card">
-                    <h3>🏆 Ewige Punktebestenliste</h3>
+                    <h3>🏆 Ewige Bestenliste (€)</h3>
                     <canvas id="chartEwigePunkte"></canvas>
                 </div>
                 <div class="chart-card">
@@ -478,9 +523,31 @@
 // ==========================================
 // APP VERSION
 // ==========================================
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.5.0";
 const APP_BUILD = "2026-07-09";
 const APP_CHANGES = [
+    "Version 2.5.0",
+    "",
+    "Neu:",
+    "• Statistik & Historie zeigen jetzt ebenfalls €",
+    "• Schmeißen/Nullspiel/Vergeben fest 1€ (unabhängig vom Tack-Wert)",
+    "• Neue Option \"Vergeben\": 1€ Strafe für Geber, Geber bleibt gleich",
+    "• Hochzeit nutzt jetzt den Wert aus \"Runde eintragen\" (kein eigenes Dropdown mehr)",
+    "• Manuelle Korrektur jetzt direkt in €",
+    "",
+    "Version 2.4.0",
+    "",
+    "Neu:",
+    "• Einstellbarer €-Wert je Tack (5/10/20/40 ct) im Setup",
+    "• Scorecards & Rundentabelle zeigen jetzt € statt Tack-Punkte",
+    "• Live-Vorschau des €-Betrags beim Runden-Eintragen",
+    "",
+    "Version 2.3.0",
+    "",
+    "Neu:",
+    "• Bockrunden-Logik (Bock, Dauerbock, Doppelbock, Dauerdoppelbock)",
+    "• Kompaktere Scorecards für Handy-Ansicht",
+    "",
     "Version 2.2.0",
     "",
     "Neu:",
@@ -498,6 +565,9 @@ const APP_CHANGES = [
     let geberIndex = 0; 
     let schreibModus = "normal";
     let cloudRohdaten = []; 
+    let bockStufe = 0; // 0=kein Bock, 1=Bock(temp,2x), 2=Dauerbock(2x), 3=Doppelbock(temp,4x), 4=Dauerdoppelbock(4x)
+    let bockRundenVerbleibend = 0;
+    let centProTack = 10;
 
     let chart1 = null;
     let chart2 = null;
@@ -518,9 +588,13 @@ const APP_CHANGES = [
             punkteHistorie = JSON.parse(localStorage.getItem('doko_punkteHistorie'));
             geberIndex = parseInt(localStorage.getItem('doko_geberIndex') || 0);
             schreibModus = localStorage.getItem('doko_schreibModus') || "normal";
+            bockStufe = parseInt(localStorage.getItem('doko_bockStufe') || 0);
+            bockRundenVerbleibend = parseInt(localStorage.getItem('doko_bockRundenVerbleibend') || 0);
+            centProTack = parseInt(localStorage.getItem('doko_centProTack') || 10);
             
             baueSpielfeldAuf();
             aktualisiereScorecard();
+            aktualisiereBockAnzeige();
             tabelleNeuZeichnen();
             document.getElementById('setupScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
@@ -614,6 +688,9 @@ const APP_CHANGES = [
         schreibModus = document.getElementById('gameModeSelect').value;
         geberIndex = 0; // Spieler auf Position 1 (Index 0) ist automatisch der erste Geber
         punkteHistorie = [];
+        bockStufe = 0;
+        bockRundenVerbleibend = 0;
+        centProTack = parseInt(document.getElementById('tackWertSelect').value);
         
         speichereInLocalStorage();
         baueSpielfeldAuf();
@@ -628,6 +705,8 @@ const APP_CHANGES = [
         document.getElementById('tableHeaders').innerHTML = headerHtml;
         document.getElementById('minusModeSonderfaelle').style.display = schreibModus === "minusOnly" ? 'block' : 'none';
         aktualisiereGeberAnzeige();
+        aktualisiereBockAnzeige();
+        aktualisiereTackVorschau();
         aktualisiereScorecard();
         aktualisiereSumme();
         document.getElementById('penaltyPlayer').innerHTML = aktiveSpieler.map((name, index) => `<option value="${index}">${name}</option>`).join('');
@@ -665,7 +744,7 @@ const APP_CHANGES = [
             return `
                 <div class="scorecard-item">
                     <div class="scorecard-name">${name}</div>
-                    <div class="scorecard-points ${pointClass}">${punkte > 0 ? '+' : ''}${punkte}</div>
+                    <div class="scorecard-points ${pointClass}">${formatEuro(punkte)}</div>
                 </div>
             `;
         }).join('');
@@ -673,9 +752,113 @@ const APP_CHANGES = [
 
     function naechsterGeberManuell() { geberIndex = (geberIndex + 1) % aktiveSpieler.length; speichereInLocalStorage(); aktualisiereGeberAnzeige(); }
 
+    // ==========================================
+    // BOCKRUNDEN-LOGIK
+    // ==========================================
+    function bockMultiplikator() {
+        if (bockStufe === 1 || bockStufe === 2) return 2;
+        if (bockStufe === 3 || bockStufe === 4) return 4;
+        return 1;
+    }
+
+    // Wandelt einen Cent-Betrag (Integer) in einen €-String um
+    function formatEuro(cents) {
+        const euro = cents / 100;
+        const vorzeichen = euro > 0 ? '+' : '';
+        return vorzeichen + euro.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    }
+
+    // Live-Vorschau unter dem Runden-Eingabefeld: zeigt den €-Betrag pro Verlierer
+    function aktualisiereTackVorschau() {
+        const feld = document.getElementById('tackVorschau');
+        if (!feld) return;
+        const basis = parseInt(document.getElementById('scoreValue').value) || 0;
+        const mult = bockMultiplikator();
+        const euro = (basis * mult * centProTack) / 100;
+        const bockHinweis = mult > 1 ? ` (inkl. ${mult}x Bock)` : "";
+        feld.innerText = `≙ ${euro.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € pro Verlierer${bockHinweis}`;
+    }
+
+    function bockAusloesen() {
+        switch (bockStufe) {
+            case 0:
+                bockStufe = 1;
+                bockRundenVerbleibend = aktiveSpieler.length;
+                alert(`🐐 Bockrunde gestartet! Die nächsten ${aktiveSpieler.length} Runden zählen doppelt.`);
+                break;
+            case 1:
+                bockStufe = 2;
+                bockRundenVerbleibend = 0;
+                alert("🐐 Dauerbock! Ab jetzt zählt für den Rest des Abends alles doppelt.");
+                break;
+            case 2:
+                bockStufe = 3;
+                bockRundenVerbleibend = aktiveSpieler.length;
+                alert(`🐐🐐 Doppelbock! Die nächsten ${aktiveSpieler.length} Runden zählen 4-fach.`);
+                break;
+            case 3:
+                bockStufe = 4;
+                bockRundenVerbleibend = 0;
+                alert("🐐🐐 Dauerdoppelbock! Ab jetzt zählt für den Rest des Abends alles 4-fach.");
+                break;
+            case 4:
+                alert("Die höchste Stufe (Dauerdoppelbock, 4-fach) ist bereits erreicht und bleibt für den Rest des Abends bestehen.");
+                return;
+        }
+        speichereInLocalStorage();
+        aktualisiereBockAnzeige();
+        aktualisiereTackVorschau();
+    }
+
+    // Wird nach jeder "echten" Spielrunde aufgerufen (normale Runde, Hochzeit, Nullspiel)
+    // und zählt die verbleibenden Bock-Runden herunter.
+    function bockRundeVerbrauchen() {
+        if (bockStufe === 1 || bockStufe === 3) {
+            bockRundenVerbleibend--;
+            if (bockRundenVerbleibend <= 0) {
+                if (bockStufe === 1) {
+                    bockStufe = 0; // Bockrunde vorbei, zurück zu normal
+                } else if (bockStufe === 3) {
+                    bockStufe = 2; // Doppelbockrunde vorbei, zurück zu Dauerbock (2-fach)
+                }
+                bockRundenVerbleibend = 0;
+            }
+        }
+    }
+
+    function aktualisiereBockAnzeige() {
+        const box = document.getElementById('bockDisplay');
+        const text = document.getElementById('bockText');
+        switch (bockStufe) {
+            case 0:
+                box.classList.remove('aktiv');
+                text.innerText = "Kein Bock aktiv";
+                break;
+            case 1:
+                box.classList.add('aktiv');
+                text.innerText = `🐐 Bockrunde: noch ${bockRundenVerbleibend} Runde(n) (2-fach)`;
+                break;
+            case 2:
+                box.classList.add('aktiv');
+                text.innerText = "🐐 Dauerbock aktiv (2-fach, Rest des Abends)";
+                break;
+            case 3:
+                box.classList.add('aktiv');
+                text.innerText = `🐐🐐 Doppelbock: noch ${bockRundenVerbleibend} Runde(n) (4-fach)`;
+                break;
+            case 4:
+                box.classList.add('aktiv');
+                text.innerText = "🐐🐐 Dauerdoppelbock aktiv (4-fach, Rest des Abends)";
+                break;
+        }
+    }
+
     function rundeEintragen() {
         const punkteBasis = parseInt(document.getElementById('scoreValue').value);
         if (isNaN(punkteBasis) || punkteBasis <= 0) return;
+        const mult = bockMultiplikator();
+        const effektiverWert = punkteBasis * mult * centProTack; // Ergebnis in Cent
+        const bockTag = mult > 1 ? ` [${mult}x Bock]` : "";
         const spielerAmTischIndizen = ermittleAktiveSpielerAmTisch();
         let gewinnerIndizen = [];
         document.querySelectorAll('.winner-cb').forEach(cb => { if (cb.checked) gewinnerIndizen.push(parseInt(cb.value)); });
@@ -685,29 +868,35 @@ const APP_CHANGES = [
         let kommentar = "Normales Spiel";
 
         if (gewinnerIndizen.length === 1) {
-            let g = gewinnerIndizen[0]; kommentar = `Solo ${aktiveSpieler[g]}`;
-            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = (i === g) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis * 3) : -punkteBasis);
+            let g = gewinnerIndizen[0]; kommentar = `Solo ${aktiveSpieler[g]}${bockTag}`;
+            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = (i === g) ? ((schreibModus === "minusOnly") ? 0 : effektiverWert * 3) : -effektiverWert);
         } else if (gewinnerIndizen.length === 3) {
-            let v = spielerAmTischIndizen.find(i => !gewinnerIndizen.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}`;
-            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = (i === v) ? -(punkteBasis * 3) : ((schreibModus === "minusOnly") ? 0 : punkteBasis));
+            let v = spielerAmTischIndizen.find(i => !gewinnerIndizen.includes(i)); kommentar = `Solo verloren ${aktiveSpieler[v]}${bockTag}`;
+            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = (i === v) ? -(effektiverWert * 3) : ((schreibModus === "minusOnly") ? 0 : effektiverWert));
         } else {
-            kommentar = `Normal (${aktiveSpieler[gewinnerIndizen[0]]} & ${aktiveSpieler[gewinnerIndizen[1]]})`;
-            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = gewinnerIndizen.includes(i) ? ((schreibModus === "minusOnly") ? 0 : punkteBasis) : -punkteBasis);
+            kommentar = `Normal (${aktiveSpieler[gewinnerIndizen[0]]} & ${aktiveSpieler[gewinnerIndizen[1]]})${bockTag}`;
+            spielerAmTischIndizen.forEach(i => rundenPunkte[i] = gewinnerIndizen.includes(i) ? ((schreibModus === "minusOnly") ? 0 : effektiverWert) : -effektiverWert);
         }
 
-        punkteHistorie.push({ punkte: rundenPunkte, wert: punkteBasis, kommentar: kommentar });
+        punkteHistorie.push({ punkte: rundenPunkte, wert: effektiverWert, kommentar: kommentar });
         geberIndex = (geberIndex + 1) % aktiveSpieler.length;
-        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereGeberAnzeige(); aktualisiereScorecard();
+        bockRundeVerbrauchen();
+        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereGeberAnzeige(); aktualisiereBockAnzeige(); aktualisiereTackVorschau(); aktualisiereScorecard();
     }
 
     function hochzeitEintragen() {
         const h = parseInt(document.getElementById('weddingPlayer').value);
-        const w = parseInt(document.getElementById('weddingMultiplier').value);
+        const punkteBasis = parseInt(document.getElementById('scoreValue').value);
+        if (isNaN(punkteBasis) || punkteBasis <= 0) { alert("Bitte zuerst einen gültigen Wert im Feld 'Runde eintragen' setzen!"); return; }
         if (!ermittleAktiveSpielerAmTisch().includes(h)) return;
+        const mult = bockMultiplikator();
+        const effektiverWert = punkteBasis * mult * centProTack; // Ergebnis in Cent
+        const bockTag = mult > 1 ? ` [${mult}x Bock]` : "";
         let rundenPunkte = new Array(aktiveSpieler.length).fill(0);
-        ermittleAktiveSpielerAmTisch().forEach(i => rundenPunkte[i] = (i === h) ? ((schreibModus === "minusOnly") ? 0 : w * 3) : -w);
-        punkteHistorie.push({ punkte: rundenPunkte, wert: w, kommentar: `Hochzeit ${aktiveSpieler[h]}` });
-        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereScorecard();
+        ermittleAktiveSpielerAmTisch().forEach(i => rundenPunkte[i] = (i === h) ? ((schreibModus === "minusOnly") ? 0 : effektiverWert * 3) : -effektiverWert);
+        punkteHistorie.push({ punkte: rundenPunkte, wert: effektiverWert, kommentar: `Hochzeit ${aktiveSpieler[h]}${bockTag}` });
+        bockRundeVerbrauchen();
+        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereBockAnzeige(); aktualisiereTackVorschau(); aktualisiereScorecard();
     }
 
     function schmeissenEintragen() {
@@ -720,15 +909,24 @@ const APP_CHANGES = [
         let r = new Array(aktiveSpieler.length).fill(0); r[geberIndex] = -100;
         punkteHistorie.push({ punkte: r, wert: 100, kommentar: `Nullspiel (${aktiveSpieler[geberIndex]})` });
         geberIndex = (geberIndex + 1) % aktiveSpieler.length;
-        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereGeberAnzeige(); aktualisiereScorecard();
+        bockRundeVerbrauchen();
+        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereGeberAnzeige(); aktualisiereBockAnzeige(); aktualisiereTackVorschau(); aktualisiereScorecard();
+    }
+
+    // Geber hat vergeben (falsch gegeben) - 1€ Strafe, Geber bleibt derselbe (muss nochmal geben)
+    function vergebenEintragen() {
+        let r = new Array(aktiveSpieler.length).fill(0); r[geberIndex] = -100;
+        punkteHistorie.push({ punkte: r, wert: 100, kommentar: `Vergeben (${aktiveSpieler[geberIndex]})` });
+        speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereScorecard();
     }
 
     function sonderbuchungEintragen() {
         const s = parseInt(document.getElementById('penaltyPlayer').value);
-        const w = parseInt(document.getElementById('penaltyValue').value);
-        if (isNaN(w)) return;
-        let r = new Array(aktiveSpieler.length).fill(0); r[s] = w;
-        punkteHistorie.push({ punkte: r, wert: Math.abs(w), kommentar: `Korrektur: ${aktiveSpieler[s]}` });
+        const wEuro = parseFloat(document.getElementById('penaltyValue').value.replace(',', '.'));
+        if (isNaN(wEuro)) return;
+        const wCent = Math.round(wEuro * 100);
+        let r = new Array(aktiveSpieler.length).fill(0); r[s] = wCent;
+        punkteHistorie.push({ punkte: r, wert: Math.abs(wCent), kommentar: `Korrektur: ${aktiveSpieler[s]}` });
         speichereInLocalStorage(); tabelleNeuZeichnen(); aktualisiereScorecard();
     }
 
@@ -741,11 +939,11 @@ const APP_CHANGES = [
     function tabelleNeuZeichnen() {
         const tbody = document.getElementById('scoreTableBody'); tbody.innerHTML = "";
         punkteHistorie.forEach((r) => {
-            let row = `<tr><td>${r.wert}</td><td style="font-style:italic; font-size:13px; text-align:left;">${r.kommentar}</td>`;
+            let row = `<tr><td>${formatEuro(r.wert)}</td><td style="font-style:italic; font-size:13px; text-align:left;">${r.kommentar}</td>`;
             r.punkte.forEach(p => {
-                if (p > 0) row += `<td style="color:#2980b9; font-weight:bold;">+${p}</td>`;
-                else if (p < 0) row += `<td style="color:red;">${p}</td>`;
-                else row += `<td style="color:#95a5a6;">0</td>`;
+                if (p > 0) row += `<td style="color:#2980b9; font-weight:bold;">${formatEuro(p)}</td>`;
+                else if (p < 0) row += `<td style="color:red;">${formatEuro(p)}</td>`;
+                else row += `<td style="color:#95a5a6;">0,00 €</td>`;
             });
             tbody.innerHTML += row + "</tr>";
         });
@@ -755,9 +953,9 @@ const APP_CHANGES = [
     function aktualisiereSumme() {
         const totalRow = document.getElementById('totalRow');
         totalRow.innerHTML = `<td>Gesamt</td><td></td>` + berechneSummen().map(s => {
-            if (s > 0) return `<td style="color:#2980b9; font-weight:bold;">+${s}</td>`;
-            if (s < 0) return `<td style="color:red; font-weight:bold;">${s}</td>`;
-            return `<td>0</td>`;
+            if (s > 0) return `<td style="color:#2980b9; font-weight:bold;">${formatEuro(s)}</td>`;
+            if (s < 0) return `<td style="color:red; font-weight:bold;">${formatEuro(s)}</td>`;
+            return `<td>0,00 €</td>`;
         }).join('');
     }
 
@@ -823,6 +1021,9 @@ const APP_CHANGES = [
         localStorage.setItem('doko_punkteHistorie', JSON.stringify(punkteHistorie));
         localStorage.setItem('doko_geberIndex', geberIndex);
         localStorage.setItem('doko_schreibModus', schreibModus);
+        localStorage.setItem('doko_bockStufe', bockStufe);
+        localStorage.setItem('doko_bockRundenVerbleibend', bockRundenVerbleibend);
+        localStorage.setItem('doko_centProTack', centProTack);
     }
 
     function spielZuruecksetzen() { if (confirm("Aktuelles Spiel löschen?")) { localStorage.clear(); location.reload(); } }
@@ -898,9 +1099,9 @@ const APP_CHANGES = [
                 let p = z ? parseInt(z["Punkte"]) : 0;
                 endsummen[sIdx] += p;
 
-                if(p > 0) rowHtml += `<td style="color:#2980b9; font-weight:bold;">+${p}</td>`;
-                else if(p < 0) rowHtml += `<td style="color:red;">${p}</td>`;
-                else rowHtml += `<td>0</td>`;
+                if(p > 0) rowHtml += `<td style="color:#2980b9; font-weight:bold;">${formatEuro(p)}</td>`;
+                else if(p < 0) rowHtml += `<td style="color:red;">${formatEuro(p)}</td>`;
+                else rowHtml += `<td>0,00 €</td>`;
             });
             rowHtml += "</tr>";
             tbodyHtml += rowHtml;
@@ -908,9 +1109,9 @@ const APP_CHANGES = [
 
         let sumRowHtml = `<tr class="total-row"><td>Gesamt</td><td></td>`;
         endsummen.forEach(s => {
-            if(s > 0) sumRowHtml += `<td style="color:#2980b9;">+${s}</td>`;
-            else if(s < 0) sumRowHtml += `<td style="color:red;">${s}</td>`;
-            else sumRowHtml += `<td>0</td>`;
+            if(s > 0) sumRowHtml += `<td style="color:#2980b9;">${formatEuro(s)}</td>`;
+            else if(s < 0) sumRowHtml += `<td style="color:red;">${formatEuro(s)}</td>`;
+            else sumRowHtml += `<td>0,00 €</td>`;
         });
         sumRowHtml += "</tr>";
         
@@ -918,37 +1119,57 @@ const APP_CHANGES = [
     }
 
     function generiereGrafiken() {
-        let punkteKonto = {};
+        let centKonto = {};
         let soloKonto = {};
 
         cloudRohdaten.forEach(row => {
             let spieler = row["Spieler"];
             if (!spieler) return;
             
-            let punkte = parseInt(row["Punkte"] || 0);
+            let punkteCent = parseInt(row["Punkte"] || 0);
             let kommentar = row["Kommentar"] || "";
 
-            if(!punkteKonto[spieler]) punkteKonto[spieler] = 0;
-            punkteKonto[spieler] += punkte;
+            if(!centKonto[spieler]) centKonto[spieler] = 0;
+            centKonto[spieler] += punkteCent;
 
             if(!soloKonto[spieler]) soloKonto[spieler] = 0;
-            if(kommentar.toLowerCase().includes("solo") && kommentar.includes(spieler) && punkte > 0) {
+            if(kommentar.toLowerCase().includes("solo") && kommentar.includes(spieler) && punkteCent > 0) {
                 soloKonto[spieler]++;
             }
         });
+
+        // Cent in Euro umrechnen für die Anzeige
+        let euroKonto = {};
+        Object.keys(centKonto).forEach(spieler => { euroKonto[spieler] = centKonto[spieler] / 100; });
 
         if(chart1) chart1.destroy();
         chart1 = new Chart(document.getElementById('chartEwigePunkte'), {
             type: 'bar',
             data: {
-                labels: Object.keys(punkteKonto),
+                labels: Object.keys(euroKonto),
                 datasets: [{
-                    label: 'Gesamtpunkte',
-                    data: Object.values(punkteKonto),
-                    backgroundColor: Object.values(punkteKonto).map(v => v >= 0 ? '#2980b9' : '#e74c3c')
+                    label: 'Gesamt (€)',
+                    data: Object.values(euroKonto),
+                    backgroundColor: Object.values(euroKonto).map(v => v >= 0 ? '#2980b9' : '#e74c3c')
                 }]
             },
-            options: { responsive: true }
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) { return context.parsed.y.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(value) { return value.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+                        }
+                    }
+                }
+            }
         });
 
         if(chart2) chart2.destroy();
