@@ -1,7 +1,7 @@
 // Einfacher Service Worker – notwendig, damit Chrome die App als installierbar erkennt.
 // Cached die App-Hülle (App Shell), damit die Seite auch offline startet.
 
-const CACHE_NAME = "dokozettel-cache-v6";
+const CACHE_NAME = "dokozettel-cache-v7";
 const URLS_ZU_CACHEN = [
   "./",
   "./index.html",
