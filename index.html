@@ -474,7 +474,7 @@
             <div class="entry-box" style="background: #fdf2f2; border-color: #f5c6cb;">
                 <h3>Manuelle Korrektur</h3>
                 <select id="penaltyPlayer"></select>
-                <input type="text" inputmode="decimal" id="penaltyValue" placeholder="Betrag in € z.B. -1,50" style="margin-top:10px;">
+                <input type="text" inputmode="decimal" pattern="[0-9.-]*" id="penaltyValue" placeholder="Betrag in € z.B. -1,50" style="margin-top:10px;">
                 <button onclick="sonderbuchungEintragen()" class="secondary" style="background-color: #e74c3c;">Buchen</button>
             </div>
             <button onclick="spielZuruecksetzen()" class="secondary" style="margin-top: 30px; background-color: #95a5a6;">Spiel löschen & Neustart</button>
