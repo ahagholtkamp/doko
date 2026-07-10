@@ -137,6 +137,46 @@
             background-color: #3498db;
             margin-top: 15px;
         }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 350px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .modal-box h3 {
+            margin-top: 0;
+        }
+        .modal-box select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin: 12px 0 18px 0;
+        }
+        .modal-btn-row {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-btn-row button {
+            flex: 1;
+            margin: 0;
+        }
         button.toggle-btn {
             background-color: #5d6d7e;
             width: auto;
@@ -515,6 +555,19 @@
         Version <span id="versionText"></span>
     </div>
 
+</div>
+
+<!-- MODAL: Wer archiviert das Spiel? -->
+<div id="archivModalOverlay" class="modal-overlay">
+    <div class="modal-box">
+        <h3>💾 Spiel archivieren</h3>
+        <p>Wer schließt dieses Spiel ab?</p>
+        <select id="archivSpielerSelect"></select>
+        <div class="modal-btn-row">
+            <button class="secondary" onclick="archivModalAbbrechen()">Abbrechen</button>
+            <button onclick="archivModalBestaetigen()">Archivieren</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -985,14 +1038,39 @@ const APP_CHANGES = [
             alert("Es gibt noch keine gespielten Runden zum Archivieren!");
             return;
         }
-        if (!confirm("Spiel beenden und an die Cloud-Datenbank senden?")) return;
+        if (aktiveSpieler.length === 0) {
+            alert("Keine aktiven Spieler gefunden!");
+            return;
+        }
 
-        const spielId = "SPIEL_" + Date.now();
+        // Auswahl-Dropdown mit den aktiven Spielern dieses Spiels befüllen
+        const select = document.getElementById('archivSpielerSelect');
+        select.innerHTML = aktiveSpieler.map(name => `<option value="${name}">${name}</option>`).join('');
+
+        document.getElementById('archivModalOverlay').classList.add('visible');
+    }
+
+    function archivModalAbbrechen() {
+        document.getElementById('archivModalOverlay').classList.remove('visible');
+    }
+
+    function archivModalBestaetigen() {
+        const archivName = document.getElementById('archivSpielerSelect').value;
+        document.getElementById('archivModalOverlay').classList.remove('visible');
+        sendeArchivDaten(archivName);
+    }
+
+    function sendeArchivDaten(archivName) {
         const jetzt = new Date();
         const datumString = `${String(jetzt.getDate()).padStart(2, '0')}.${String(jetzt.getMonth()+1).padStart(2, '0')}.${jetzt.getFullYear()} ${String(jetzt.getHours()).padStart(2, '0')}:${String(jetzt.getMinutes()).padStart(2, '0')}`;
-        
+
+        // Lesbare, eindeutige Spiel-ID: Datum_Uhrzeit_Name (inkl. Sekunden gegen Kollisionen)
+        const idDatum = `${String(jetzt.getDate()).padStart(2, '0')}.${String(jetzt.getMonth()+1).padStart(2, '0')}.${jetzt.getFullYear()}_${String(jetzt.getHours()).padStart(2, '0')}-${String(jetzt.getMinutes()).padStart(2, '0')}-${String(jetzt.getSeconds()).padStart(2, '0')}`;
+        const idNameTeil = archivName.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g, '');
+        const spielId = `${idDatum}_${idNameTeil}`;
+
         let datenbankRunden = [];
-        
+
         punkteHistorie.forEach((runde, rundenIndex) => {
             aktiveSpieler.forEach((spielerName, spielerIdx) => {
                 datenbankRunden.push({
@@ -1008,6 +1086,7 @@ const APP_CHANGES = [
             spielId: spielId,
             datum: datumString,
             modus: schreibModus === "minusOnly" ? "Nur Minus" : "Normal (+/-)",
+            archiviertVon: archivName,
             runden: datenbankRunden
         };
 
